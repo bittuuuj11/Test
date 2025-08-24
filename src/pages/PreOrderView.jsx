@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { ArrowLeft, Trash2, Plus, Minus, ShoppingCart, Calendar, Clock } from 'lucide-react';
 
@@ -8,8 +9,8 @@ const PreOrderView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { restaurants, cart, removeFromCart, clearCart } = useData();
-  const { addNotification } = useNotification();
   const { apiCall } = useAuth();
+  const { addNotification } = useNotification();
   
   const restaurant = restaurants.find(r => r.id === parseInt(id));
   const restaurantCartItems = cart.filter(item => item.restaurantId === parseInt(id));
