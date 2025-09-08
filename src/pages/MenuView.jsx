@@ -47,10 +47,14 @@ const MenuView = () => {
       const result = await apiCall(`/restaurants/${id}/menu`);
       if (result.success) {
         setMenuItems(result.data);
+        console.log('✅ Menu items loaded:', result.data.length);
       }
     } catch (error) {
       console.error('Failed to load menu:', error);
-      addNotification('Failed to load menu', 'error');
+      // Don't show error notification for network issues
+      if (!error.message.includes('fetch') && !error.message.includes('Network')) {
+        addNotification('Failed to load menu', 'error');
+      }
       setMenuItems([]);
     } finally {
       setIsLoadingMenu(false);

@@ -17,7 +17,12 @@ const CustomerDashboard = () => {
   React.useEffect(() => {
     loadUserOrders();
     loadUserBookings();
-    const interval = setInterval(loadRestaurants, 30000); // Refresh every 30 seconds
+    // Force load restaurants on mount to ensure fresh data
+    loadRestaurants();
+    
+    const interval = setInterval(() => {
+      loadRestaurants();
+    }, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 

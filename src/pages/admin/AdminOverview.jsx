@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useData } from '../../context/DataContext';
 import { 
   TrendingUp, 
   Users, 
@@ -19,6 +20,7 @@ import {
 const AdminOverview = () => {
   const { apiCall } = useAuth();
   const { addNotification } = useNotification();
+  const { loadRestaurants } = useData();
   
   const [dashboardData, setDashboardData] = useState({
     stats: {},
@@ -31,6 +33,9 @@ const AdminOverview = () => {
 
   useEffect(() => {
     loadDashboardData();
+    // Set up periodic refresh
+    const interval = setInterval(loadDashboardData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const loadDashboardData = async () => {
@@ -46,8 +51,11 @@ const AdminOverview = () => {
       if (tablesResponse.success) {
         setRecentTables(tablesResponse.data.slice(0, 5));
       }
+
+      // Refresh restaurants data in global context
+      loadRestaurants();
     } catch (error) {
-      addNotification('Failed to load dashboard data', 'error');
+      console.error('Failed to load dashboard data:', error);
       // Set default data for demo
       setDashboardData({
         stats: {

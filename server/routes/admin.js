@@ -60,7 +60,7 @@ router.get('/tables', async (req, res) => {
             LEFT JOIN table_images ti ON rt.id = ti.table_id AND ti.is_active = 1
             WHERE rt.restaurant_id = ?
             GROUP BY rt.id
-            ORDER BY rt.created_at DESC
+            ORDER BY rt.table_number ASC
             ${limit ? 'LIMIT ?' : ''}
         `, limit ? [restaurantId, parseInt(limit)] : [restaurantId]);
 
@@ -74,6 +74,8 @@ router.get('/tables', async (req, res) => {
             `, [table.id]);
             table.images = images;
         }
+
+        console.log(`✅ Admin tables loaded: ${tables.length} tables for restaurant ${restaurantId}`);
 
         res.status(200).json({
             success: true,
@@ -132,14 +134,25 @@ router.post('/tables', [
 
         console.log(`✅ Table created: Table ${table_number} by Admin ${req.user.id}`);
 
+        // Get the created table with all details
+        const createdTable = await db.get(`
+            SELECT 
+                rt.id, rt.table_number, rt.capacity, rt.status, rt.type, 
+                rt.features, rt.x_position, rt.y_position, rt.created_at,
+                COUNT(ti.id) as image_count,
+                MIN(ti.image_path) as thumbnail_image
+            FROM restaurant_tables rt
+            LEFT JOIN table_images ti ON rt.id = ti.table_id AND ti.is_active = 1
+            WHERE rt.id = ?
+            GROUP BY rt.id
+        `, [result.id]);
+
         res.status(201).json({
             success: true,
             message: 'Table created successfully',
             data: {
-                id: result.id,
-                table_number,
-                capacity,
-                type
+                ...createdTable,
+                images: []
             }
         });
 
@@ -606,6 +619,8 @@ router.get('/menu', async (req, res) => {
             WHERE restaurant_id = ?
             ORDER BY category, name
         `, [restaurantId]);
+
+        console.log(`✅ Admin menu items loaded: ${menuItems.length} items for restaurant ${restaurantId}`);
 
         res.status(200).json({
             success: true,

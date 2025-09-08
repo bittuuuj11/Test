@@ -149,12 +149,18 @@ export const DataProvider = ({ children }) => {
       if (isAuthenticated && token) {
         interval = setInterval(() => {
           loadRestaurants();
-        }, 60000); // Refresh every minute
+        }, 30000); // Refresh every 30 seconds
       }
       return () => clearInterval(interval);
     }
   }, [authChecked, isAuthenticated, token]);
   
+  // Force reload restaurants data
+  const forceLoadRestaurants = async () => {
+    console.log('🔄 Force reloading restaurants data...');
+    await loadRestaurants();
+  };
+
   // Admin functionality
   const updateRestaurant = (restaurantId, updates) => {
     setRestaurants(prev => prev.map(restaurant => 
@@ -235,7 +241,8 @@ export const DataProvider = ({ children }) => {
     addBooking,
     updateTableStatus,
     loadUserOrders,
-    loadUserBookings
+    loadUserBookings,
+    forceLoadRestaurants
   };
 
   return (

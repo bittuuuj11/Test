@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useData } from '../../context/DataContext';
 import { 
   ChefHat, 
   Plus, 
@@ -20,6 +21,7 @@ import {
 const AdminMenu = () => {
   const { apiCall } = useAuth();
   const { addNotification } = useNotification();
+  const { loadRestaurants } = useData();
   
   const [menuItems, setMenuItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -54,6 +56,12 @@ const AdminMenu = () => {
   useEffect(() => {
     loadMenuItems();
     loadTables();
+    // Set up periodic refresh
+    const interval = setInterval(() => {
+      loadMenuItems();
+      loadTables();
+    }, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -61,26 +69,36 @@ const AdminMenu = () => {
   }, [menuItems, searchTerm, categoryFilter]);
 
   const loadMenuItems = async () => {
+    setIsLoading(true);
     try {
       const response = await apiCall('/admin/menu');
       if (response.success) {
         setMenuItems(response.data);
+        console.log('✅ Menu items loaded:', response.data.length);
       }
     } catch (error) {
       console.error('Failed to load menu items:', error);
+      addNotification('Failed to load menu items', 'error');
       // Set empty array for demo
       setMenuItems([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const loadTables = async () => {
+    setIsLoading(true);
     try {
       const response = await apiCall('/admin/tables');
       if (response.success) {
         setTables(response.data);
+        console.log('✅ Tables loaded:', response.data.length);
+        // Refresh restaurants data in global context to update customer view
+        loadRestaurants();
       }
     } catch (error) {
       console.error('Failed to load tables:', error);
+      addNotification('Failed to load tables', 'error');
       setTables([]);
     } finally {
       setIsLoading(false);
@@ -115,7 +133,9 @@ const AdminMenu = () => {
           x_position: 0,
           y_position: 0
         });
-        loadTables();
+        // Reload both tables and restaurants data
+        await loadTables();
+        await loadRestaurants();
       }
     } catch (error) {
       addNotification(error.message || 'Failed to add table', 'error');
@@ -149,7 +169,7 @@ const AdminMenu = () => {
       if (result.success) {
         addNotification(`${files.length} image(s) uploaded successfully`, 'success');
         setShowImageModal(false);
-        loadTables();
+        await loadTables();
       } else {
         addNotification(result.message || 'Failed to upload images', 'error');
       }
@@ -170,7 +190,8 @@ const AdminMenu = () => {
 
       if (response.success) {
         addNotification('Table deleted successfully', 'success');
-        loadTables();
+        await loadTables();
+        await loadRestaurants();
       }
     } catch (error) {
       addNotification(error.message || 'Failed to delete table', 'error');
@@ -187,7 +208,7 @@ const AdminMenu = () => {
 
       if (response.success) {
         addNotification('Image deleted successfully', 'success');
-        loadTables();
+        await loadTables();
       }
     } catch (error) {
       addNotification('Failed to delete image', 'error');
@@ -239,7 +260,7 @@ const AdminMenu = () => {
           dietary: '',
           chef_special: false
         });
-        loadMenuItems();
+        await loadMenuItems();
       }
     } catch (error) {
       addNotification(error.message || 'Failed to add menu item', 'error');
@@ -256,7 +277,7 @@ const AdminMenu = () => {
       if (response.success) {
         addNotification('Menu item updated successfully', 'success');
         setEditingItem(null);
-        loadMenuItems();
+        await loadMenuItems();
       }
     } catch (error) {
       addNotification(error.message || 'Failed to update menu item', 'error');
@@ -273,7 +294,7 @@ const AdminMenu = () => {
 
       if (response.success) {
         addNotification('Menu item deleted successfully', 'success');
-        loadMenuItems();
+        await loadMenuItems();
       }
     } catch (error) {
       addNotification(error.message || 'Failed to delete menu item', 'error');
@@ -560,16 +581,6 @@ const AdminMenu = () => {
                   <option value="Sushi">Sushi</option>
                   <option value="Sashimi">Sashimi</option>
                 </select>
-                <select
-                  value={newItem.cuisine || ''}
-                  onChange={(e) => setNewItem({...newItem, cuisine: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Cuisine Type</option>
-                  {cuisineTypes.map(cuisine => (
-                    <option key={cuisine} value={cuisine}>{cuisine}</option>
-                  ))}
-                </select>
                 <input
                   type="number"
                   step="0.01"
@@ -693,16 +704,6 @@ const AdminMenu = () => {
                   <option value="Pasta">Pasta</option>
                   <option value="Sushi">Sushi</option>
                   <option value="Sashimi">Sashimi</option>
-                </select>
-                <select
-                  value={editingItem.cuisine || ''}
-                  onChange={(e) => setEditingItem({...editingItem, cuisine: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Cuisine Type</option>
-                  {cuisineTypes.map(cuisine => (
-                    <option key={cuisine} value={cuisine}>{cuisine}</option>
-                  ))}
                 </select>
                 <input
                   type="number"

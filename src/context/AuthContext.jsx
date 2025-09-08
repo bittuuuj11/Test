@@ -128,17 +128,18 @@ export const AuthProvider = ({ children }) => {
       }
       
       const data = await response.json();
+      console.log(`✅ API call successful: ${endpoint}`, data.success ? 'Success' : 'Failed');
       return data;
     } catch (error) {
       // Handle network connection errors
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        console.warn('⚠️ Network connection error - backend may not be running');
+        console.warn('⚠️ Network connection error - backend may not be running:', endpoint);
         throw new Error('Unable to connect to server. Please ensure the backend is running.');
       }
       
       // Log other errors for debugging
       if (!error.message.includes('fetch') && !error.message.includes('Network')) {
-        console.error('API call error:', error);
+        console.error(`API call error for ${endpoint}:`, error);
       }
       throw error;
     } finally {

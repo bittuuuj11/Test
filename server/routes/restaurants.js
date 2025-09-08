@@ -20,6 +20,8 @@ router.get('/', async (req, res) => {
             ORDER BY r.rating DESC
         `);
 
+        console.log(`✅ Public restaurants loaded: ${restaurants.length} restaurants`);
+
         res.status(200).json({
             success: true,
             message: 'Restaurants retrieved successfully',
@@ -139,9 +141,9 @@ router.get('/:id/tables', async (req, res) => {
         const tables = await db.all(`
             SELECT 
                 rt.id, rt.table_number, rt.capacity, rt.status, rt.type, 
-                rt.features, rt.x_position, rt.y_position,
+                rt.features, rt.x_position, rt.y_position, rt.created_at,
                 COUNT(ti.id) as image_count,
-                GROUP_CONCAT(ti.image_path) as image_paths
+                MIN(ti.image_path) as thumbnail_image
             FROM restaurant_tables rt
             LEFT JOIN table_images ti ON rt.id = ti.table_id AND ti.is_active = 1
             WHERE rt.restaurant_id = ?

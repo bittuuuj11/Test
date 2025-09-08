@@ -33,9 +33,12 @@ function App() {
       
       if (result.success) {
         setTables(result.data);
+        console.log('✅ Tables loaded for booking view:', result.data.length);
       }
     } catch (error) {
       console.error('Failed to load tables:', error);
+      // Set fallback data if API fails
+      setTables([]);
     } finally {
       setIsLoadingPhotos(false);
     }
@@ -150,14 +153,14 @@ function App() {
     // Make actual booking API call
     const result = await apiCall('/bookings', {
       method: 'POST',
-      body: JSON.stringify({
+      body: {
         restaurantId: parseInt(id),
         tableId: selectedTable.id,
         date: bookingData.date,
         time: bookingData.time,
         guests: bookingData.guests,
         specialRequests: bookingData.specialRequests
-      })
+      }
     });
 
     if (result.success) {
@@ -176,7 +179,7 @@ function App() {
       });
         
       // Refresh tables to update status
-      loadTables();
+      await loadTables();
     }
   };
 
