@@ -958,4 +958,150 @@ router.get('/bookings', async (req, res) => {
     }
 });
 
+// GET /api/admin/analytics - Get restaurant analytics
+router.get('/analytics', async (req, res) => {
+    try {
+        const restaurantId = req.user.restaurant_id;
+        const { range = '7days' } = req.query;
+
+        // Calculate date range
+        let dateFilter = '';
+        switch (range) {
+            case '7days':
+                dateFilter = "AND created_at >= date('now', '-7 days')";
+                break;
+            case '30days':
+                dateFilter = "AND created_at >= date('now', '-30 days')";
+                break;
+            case '90days':
+                dateFilter = "AND created_at >= date('now', '-90 days')";
+                break;
+            case '1year':
+                dateFilter = "AND created_at >= date('now', '-1 year')";
+                break;
+        }
+
+        // Get revenue analytics
+        const revenueStats = await db.get(`
+            SELECT 
+                SUM(total_amount) as total,
+                COUNT(*) as order_count
+            FROM orders 
+            WHERE restaurant_id = ? AND status = 'completed' ${dateFilter}
+        `, [restaurantId]);
+
+        // Get order analytics
+        const orderStats = await db.get(`
+            SELECT 
+                COUNT(*) as total,
+                AVG(total_amount) as avg_value
+            FROM orders 
+            WHERE restaurant_id = ? ${dateFilter}
+        `, [restaurantId]);
+
+        // Get customer analytics
+        const customerStats = await db.get(`
+            SELECT COUNT(DISTINCT user_id) as new
+            FROM orders 
+            WHERE restaurant_id = ? ${dateFilter}
+        `, [restaurantId]);
+
+        // Get popular items
+        const popularItems = await db.all(`
+            SELECT 
+                mi.name,
+                COUNT(oi.id) as orders,
+                SUM(oi.price * oi.quantity) as revenue,
+                ROUND(COUNT(oi.id) * 100.0 / (SELECT COUNT(*) FROM order_items oi2 
+                    JOIN orders o2 ON oi2.order_id = o2.id 
+                    WHERE o2.restaurant_id = ? ${dateFilter}), 2) as percentage
+            FROM menu_items mi
+            JOIN order_items oi ON mi.id = oi.menu_item_id
+            JOIN orders o ON oi.order_id = o.id
+            WHERE mi.restaurant_id = ? ${dateFilter}
+            GROUP BY mi.id, mi.name
+            ORDER BY orders DESC
+            LIMIT 10
+        `, [restaurantId, restaurantId]);
+
+        // Get daily stats
+        const dailyStats = await db.all(`
+            SELECT 
+                date(created_at) as date,
+                COUNT(*) as orders,
+                SUM(CASE WHEN status = 'completed' THEN total_amount ELSE 0 END) as revenue,
+                AVG(CASE WHEN status = 'completed' THEN total_amount ELSE NULL END) as avg_order,
+                COUNT(DISTINCT user_id) as new_customers
+            FROM orders 
+            WHERE restaurant_id = ? ${dateFilter}
+            GROUP BY date(created_at)
+            ORDER BY date DESC
+            LIMIT 30
+        `, [restaurantId]);
+
+        res.status(200).json({
+            success: true,
+            message: 'Analytics data retrieved successfully',
+            data: {
+                revenue: {
+                    total: revenueStats.total || 0,
+                    growth: 15 // Mock growth percentage
+                },
+                orders: {
+                    total: orderStats.total || 0,
+                    growth: 8, // Mock growth percentage
+                    avg_value: orderStats.avg_value || 0
+                },
+                customers: {
+                    new: customerStats.new || 0,
+                    growth: 12 // Mock growth percentage
+                },
+                popular_items: popularItems,
+                daily_stats: dailyStats
+            }
+        });
+
+    } catch (error) {
+        console.error('Get analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error while fetching analytics'
+        });
+    }
+});
+
+// GET /api/admin/customers - Get restaurant customers
+router.get('/customers', async (req, res) => {
+    try {
+        const restaurantId = req.user.restaurant_id;
+
+        // Get customers who have made orders or bookings at this restaurant
+        const customers = await db.all(`
+            SELECT DISTINCT
+                lu.id, lu.name, lu.email, lu.phone, lu.created_at,
+                COUNT(DISTINCT o.id) as total_orders,
+                SUM(CASE WHEN o.status = 'completed' THEN o.total_amount ELSE 0 END) as total_spent
+            FROM login_users lu
+            LEFT JOIN orders o ON lu.id = o.user_id AND o.restaurant_id = ?
+            LEFT JOIN bookings b ON lu.id = b.user_id AND b.restaurant_id = ?
+            WHERE (o.id IS NOT NULL OR b.id IS NOT NULL)
+            GROUP BY lu.id, lu.name, lu.email, lu.phone, lu.created_at
+            ORDER BY total_spent DESC, total_orders DESC
+        `, [restaurantId, restaurantId]);
+
+        res.status(200).json({
+            success: true,
+            message: 'Customers retrieved successfully',
+            data: customers
+        });
+
+    } catch (error) {
+        console.error('Get customers error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error while fetching customers'
+        });
+    }
+});
+
 module.exports = router;

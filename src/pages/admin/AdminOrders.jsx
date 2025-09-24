@@ -42,11 +42,13 @@ const AdminOrders = () => {
       } else if (Array.isArray(response)) {
         // Handle direct array response
         setOrders(response);
+      } else {
+        console.warn('Unexpected orders response format:', response);
+        setOrders([]);
       }
     } catch (error) {
       console.error('Failed to load orders:', error);
-      // Set empty array for demo
-      setOrders([]);
+      addNotification('Failed to load orders from server', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -82,6 +84,10 @@ const AdminOrders = () => {
           order.id === orderId ? { ...order, status: newStatus } : order
         ));
         addNotification('Order status updated successfully', 'success');
+        // Force reload to ensure consistency
+        setTimeout(() => {
+          loadOrders();
+        }, 300);
       }
     } catch (error) {
       addNotification('Failed to update order status', 'error');

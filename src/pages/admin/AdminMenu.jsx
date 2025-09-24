@@ -44,6 +44,7 @@ const AdminMenu = () => {
   const [newItem, setNewItem] = useState({
     name: '',
     category: '',
+    cuisine: '',
     price: '',
     description: '',
     image: '',
@@ -68,11 +69,13 @@ const AdminMenu = () => {
       } else if (Array.isArray(response)) {
         // Handle direct array response
         setMenuItems(response);
+      } else {
+        console.warn('Unexpected menu response format:', response);
+        setMenuItems([]);
       }
     } catch (error) {
       console.error('Failed to load menu items:', error);
-      // Set empty array for demo
-      setMenuItems([]);
+      addNotification('Failed to load menu items from server', 'error');
     }
   };
 
@@ -84,10 +87,13 @@ const AdminMenu = () => {
       } else if (Array.isArray(response)) {
         // Handle direct array response
         setTables(response);
+      } else {
+        console.warn('Unexpected tables response format:', response);
+        setTables([]);
       }
     } catch (error) {
       console.error('Failed to load tables:', error);
-      setTables([]);
+      addNotification('Failed to load tables from server', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +127,11 @@ const AdminMenu = () => {
           x_position: 0,
           y_position: 0
         });
-        loadTables();
+        // Reload tables and force refresh
+        await loadTables();
+        setTimeout(() => {
+          loadTables();
+        }, 500);
       }
     } catch (error) {
       addNotification(error.message || 'Failed to add table', 'error');
@@ -155,7 +165,11 @@ const AdminMenu = () => {
       if (result.success) {
         addNotification(`${files.length} image(s) uploaded successfully`, 'success');
         setShowImageModal(false);
-        loadTables();
+        // Reload tables and force refresh
+        await loadTables();
+        setTimeout(() => {
+          loadTables();
+        }, 500);
       } else {
         addNotification(result.message || 'Failed to upload images', 'error');
       }
@@ -176,7 +190,11 @@ const AdminMenu = () => {
 
       if (response.success) {
         addNotification('Table deleted successfully', 'success');
-        loadTables();
+        // Reload tables and force refresh
+        await loadTables();
+        setTimeout(() => {
+          loadTables();
+        }, 500);
       }
     } catch (error) {
       addNotification(error.message || 'Failed to delete table', 'error');
@@ -193,7 +211,11 @@ const AdminMenu = () => {
 
       if (response.success) {
         addNotification('Image deleted successfully', 'success');
-        loadTables();
+        // Reload tables and force refresh
+        await loadTables();
+        setTimeout(() => {
+          loadTables();
+        }, 500);
       }
     } catch (error) {
       addNotification('Failed to delete image', 'error');
@@ -229,7 +251,8 @@ const AdminMenu = () => {
         method: 'POST',
         body: {
           ...newItem,
-          price: parseFloat(newItem.price)
+          price: parseFloat(newItem.price),
+          cuisine: newItem.cuisine || 'General'
         }
       });
 
@@ -239,13 +262,19 @@ const AdminMenu = () => {
         setNewItem({
           name: '',
           category: '',
+          cuisine: '',
           price: '',
           description: '',
           image: '',
           dietary: '',
           chef_special: false
         });
-        loadMenuItems();
+        // Reload both menu items and refresh the data
+        await loadMenuItems();
+        // Force a small delay to ensure backend has processed the change
+        setTimeout(() => {
+          loadMenuItems();
+        }, 500);
       }
     } catch (error) {
       addNotification(error.message || 'Failed to add menu item', 'error');
@@ -262,7 +291,11 @@ const AdminMenu = () => {
       if (response.success) {
         addNotification('Menu item updated successfully', 'success');
         setEditingItem(null);
-        loadMenuItems();
+        // Reload menu items and force refresh
+        await loadMenuItems();
+        setTimeout(() => {
+          loadMenuItems();
+        }, 500);
       }
     } catch (error) {
       addNotification(error.message || 'Failed to update menu item', 'error');
@@ -279,7 +312,11 @@ const AdminMenu = () => {
 
       if (response.success) {
         addNotification('Menu item deleted successfully', 'success');
-        loadMenuItems();
+        // Reload menu items and force refresh
+        await loadMenuItems();
+        setTimeout(() => {
+          loadMenuItems();
+        }, 500);
       }
     } catch (error) {
       addNotification(error.message || 'Failed to delete menu item', 'error');
@@ -287,7 +324,15 @@ const AdminMenu = () => {
   };
 
   const toggleAvailability = async (itemId, currentStatus) => {
-    await handleUpdateItem(itemId, { available: !currentStatus });
+    try {
+      await handleUpdateItem(itemId, { available: !currentStatus });
+      // Force reload after availability change
+      setTimeout(() => {
+        loadMenuItems();
+      }, 300);
+    } catch (error) {
+      addNotification('Failed to update item availability', 'error');
+    }
   };
 
   const categories = ['all', ...new Set(menuItems.map(item => item.category))];

@@ -36,13 +36,27 @@ function App() {
       } else if (Array.isArray(result)) {
         // Handle direct array response
         setTables(result);
+      } else {
+        console.warn('Unexpected tables response format:', result);
+        setTables([]);
       }
     } catch (error) {
       console.error('Failed to load tables:', error);
+      addNotification('Failed to load tables from server', 'error');
     } finally {
       setIsLoadingPhotos(false);
     }
   };
+
+  // Refresh tables data periodically to catch admin updates
+  React.useEffect(() => {
+    if (id) {
+      const interval = setInterval(() => {
+        loadTables();
+      }, 20000); // Refresh every 20 seconds
+      return () => clearInterval(interval);
+    }
+  }, [id]);
 
   // Convert backend table data to display format
   const getTableDisplayData = (table) => {

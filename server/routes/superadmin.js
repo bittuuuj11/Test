@@ -280,4 +280,79 @@ router.get('/analytics', async (req, res) => {
     }
 });
 
+// PUT /api/super-admin/restaurants/:id/status - Update restaurant status
+router.put('/restaurants/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { is_active } = req.body;
+
+        const result = await db.run(
+            'UPDATE restaurants SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [is_active, id]
+        );
+
+        if (result.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Restaurant not found'
+            });
+        }
+
+        console.log(`✅ Restaurant status updated: ID ${id} set to ${is_active ? 'active' : 'inactive'} by Super Admin ${req.user.id}`);
+
+        res.status(200).json({
+            success: true,
+            message: 'Restaurant status updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Update restaurant status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error while updating restaurant status'
+        });
+    }
+});
+
+// PUT /api/super-admin/users/:id/status - Update user status
+router.put('/users/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { is_active } = req.body;
+
+        // Update in login_users table for customers
+        const customerResult = await db.run(
+            'UPDATE login_users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [is_active, id]
+        );
+
+        // Also update in users table for admins
+        const adminResult = await db.run(
+            'UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [is_active, id]
+        );
+
+        if (customerResult.changes === 0 && adminResult.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        console.log(`✅ User status updated: ID ${id} set to ${is_active ? 'active' : 'inactive'} by Super Admin ${req.user.id}`);
+
+        res.status(200).json({
+            success: true,
+            message: 'User status updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Update user status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error while updating user status'
+        });
+    }
+});
+
 module.exports = router;

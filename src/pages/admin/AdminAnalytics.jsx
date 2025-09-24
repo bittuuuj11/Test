@@ -36,20 +36,26 @@ const AdminAnalytics = () => {
       const response = await apiCall(`/admin/analytics?range=${timeRange}`);
       if (response.success) {
         setAnalyticsData(response.data);
+      } else {
+        console.warn('Unexpected analytics response format:', response);
+        setFallbackAnalytics();
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
-      // Set default analytics data for demo
-      setAnalyticsData({
-        revenue: { total: 0, growth: 0 },
-        orders: { total: 0, growth: 0, avg_value: 0 },
-        customers: { new: 0, growth: 0 },
-        popular_items: [],
-        daily_stats: []
-      });
+      setFallbackAnalytics();
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const setFallbackAnalytics = () => {
+    setAnalyticsData({
+      revenue: { total: 0, growth: 0 },
+      orders: { total: 0, growth: 0, avg_value: 0 },
+      customers: { new: 0, growth: 0 },
+      popular_items: [],
+      daily_stats: []
+    });
   };
 
   if (isLoading) {

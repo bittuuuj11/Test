@@ -16,7 +16,11 @@ const CustomerDashboard = () => {
   React.useEffect(() => {
     loadUserOrders();
     loadUserBookings();
-    const interval = setInterval(loadRestaurants, 30000); // Refresh every 30 seconds
+    const interval = setInterval(() => {
+      loadRestaurants();
+      loadUserOrders();
+      loadUserBookings();
+    }, 20000); // Refresh every 20 seconds for better data consistency
     return () => clearInterval(interval);
   }, []);
 

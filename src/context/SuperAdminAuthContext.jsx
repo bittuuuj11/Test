@@ -118,6 +118,12 @@ export const SuperAdminAuthProvider = ({ children }) => {
       }
       
       const data = await response.json();
+      
+      // Log successful API calls for debugging
+      if (endpoint.includes('/super-admin/')) {
+        console.log(`✅ Super Admin API call successful: ${endpoint}`, data.success ? 'Success' : 'Failed');
+      }
+      
       return data;
     } catch (error) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {

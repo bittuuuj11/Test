@@ -118,6 +118,12 @@ export const AdminAuthProvider = ({ children }) => {
       }
       
       const data = await response.json();
+      
+      // Log successful API calls for debugging
+      if (endpoint.includes('/admin/')) {
+        console.log(`✅ Admin API call successful: ${endpoint}`, data.success ? 'Success' : 'Failed');
+      }
+      
       return data;
     } catch (error) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {

@@ -86,63 +86,72 @@ export const CustomerDataProvider = ({ children }) => {
         console.log('🏪 Customer restaurants loaded from API');
       } else if (result && Array.isArray(result)) {
         // Handle direct array response from backend
-        setRestaurants(result.data);
+        setRestaurants(result);
         setDataLoaded(true);
       } else if (Array.isArray(result)) {
         // Handle direct array response
         setRestaurants(result);
         setDataLoaded(true);
+      } else {
+        console.warn('Unexpected restaurants response format:', result);
+        // Don't clear existing data on unexpected format
+        if (restaurants.length === 0) {
+          setFallbackRestaurants();
+        }
       }
     } catch (error) {
       console.warn('⚠️ Failed to load restaurants from API:', error.message);
       // Don't clear existing data on network errors
       if (restaurants.length === 0) {
-        // Set fallback data if no stored data exists
-        setRestaurants([
-          {
-            id: 1,
-            name: 'The Golden Spoon',
-            cuisine: 'Fine Dining',
-            rating: 4.8,
-            image: 'https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg',
-            address: '123 Gourmet Street, Downtown',
-            phone: '+1 (555) 123-4567',
-            description: 'Exquisite fine dining experience with contemporary cuisine',
-            tables: [],
-            total_tables: 20,
-            available_tables: 12
-          },
-          {
-            id: 2,
-            name: 'Sakura Sushi',
-            cuisine: 'Japanese',
-            rating: 4.6,
-            image: 'https://images.pexels.com/photos/357756/pexels-photo-357756.jpeg',
-            address: '456 Zen Garden Ave, Midtown',
-            phone: '+1 (555) 234-5678',
-            description: 'Authentic Japanese cuisine with fresh sushi and sashimi',
-            tables: [],
-            total_tables: 15,
-            available_tables: 8
-          },
-          {
-            id: 3,
-            name: "Mama's Italian",
-            cuisine: 'Italian',
-            rating: 4.7,
-            image: 'https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg',
-            address: '789 Pasta Lane, Little Italy',
-            phone: '+1 (555) 345-6789',
-            description: 'Traditional Italian flavors in a cozy family atmosphere',
-            tables: [],
-            total_tables: 18,
-            available_tables: 10
-          }
-        ]);
+        setFallbackRestaurants();
       }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const setFallbackRestaurants = () => {
+    setRestaurants([
+      {
+        id: 1,
+        name: 'The Golden Spoon',
+        cuisine: 'Fine Dining',
+        rating: 4.8,
+        image: 'https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg',
+        address: '123 Gourmet Street, Downtown',
+        phone: '+1 (555) 123-4567',
+        description: 'Exquisite fine dining experience with contemporary cuisine',
+        tables: [],
+        total_tables: 20,
+        available_tables: 12
+      },
+      {
+        id: 2,
+        name: 'Sakura Sushi',
+        cuisine: 'Japanese',
+        rating: 4.6,
+        image: 'https://images.pexels.com/photos/357756/pexels-photo-357756.jpeg',
+        address: '456 Zen Garden Ave, Midtown',
+        phone: '+1 (555) 234-5678',
+        description: 'Authentic Japanese cuisine with fresh sushi and sashimi',
+        tables: [],
+        total_tables: 15,
+        available_tables: 8
+      },
+      {
+        id: 3,
+        name: "Mama's Italian",
+        cuisine: 'Italian',
+        rating: 4.7,
+        image: 'https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg',
+        address: '789 Pasta Lane, Little Italy',
+        phone: '+1 (555) 345-6789',
+        description: 'Traditional Italian flavors in a cozy family atmosphere',
+        tables: [],
+        total_tables: 18,
+        available_tables: 10
+      }
+    ]);
   };
 
   // Load restaurants when authentication is ready
@@ -155,7 +164,7 @@ export const CustomerDataProvider = ({ children }) => {
       if (isAuthenticated && token) {
         interval = setInterval(() => {
           loadRestaurants();
-        }, 60000); // Refresh every minute
+        }, 30000); // Refresh every 30 seconds for better data consistency
       }
       return () => clearInterval(interval);
     }
@@ -199,6 +208,8 @@ export const CustomerDataProvider = ({ children }) => {
       if (result && result.success) {
         setOrders(result.data);
         console.log('📋 Customer orders loaded from API');
+      } else {
+        console.warn('Unexpected orders response format:', result);
       }
     } catch (error) {
       console.warn('⚠️ Failed to load customer orders:', error.message);
@@ -213,6 +224,8 @@ export const CustomerDataProvider = ({ children }) => {
       if (result && result.success) {
         setBookings(result.data);
         console.log('📅 Customer bookings loaded from API');
+      } else {
+        console.warn('Unexpected bookings response format:', result);
       }
     } catch (error) {
       console.warn('⚠️ Failed to load customer bookings:', error.message);

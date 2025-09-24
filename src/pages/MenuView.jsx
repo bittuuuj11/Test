@@ -53,6 +53,9 @@ const MenuView = () => {
       } else if (Array.isArray(result)) {
         // Handle direct array response
         setMenuItems(result);
+      } else {
+        console.warn('Unexpected menu response format:', result);
+        setMenuItems([]);
       }
     } catch (error) {
       console.error('Failed to load menu:', error);
@@ -62,6 +65,16 @@ const MenuView = () => {
       setIsLoadingMenu(false);
     }
   };
+
+  // Refresh menu data periodically to catch admin updates
+  React.useEffect(() => {
+    if (id) {
+      const interval = setInterval(() => {
+        loadMenu();
+      }, 15000); // Refresh every 15 seconds
+      return () => clearInterval(interval);
+    }
+  }, [id]);
 
   if (!restaurant) {
     return (

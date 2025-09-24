@@ -31,11 +31,13 @@ const AdminBookings = () => {
       } else if (Array.isArray(response)) {
         // Handle direct array response
         setBookings(response);
+      } else {
+        console.warn('Unexpected bookings response format:', response);
+        setBookings([]);
       }
     } catch (error) {
       console.error('Failed to load bookings:', error);
-      // Set empty array for demo
-      setBookings([]);
+      addNotification('Failed to load bookings from server', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +89,10 @@ const AdminBookings = () => {
           booking.id === bookingId ? { ...booking, status: newStatus } : booking
         ));
         addNotification('Booking status updated successfully', 'success');
+        // Force reload to ensure consistency
+        setTimeout(() => {
+          loadBookings();
+        }, 300);
       }
     } catch (error) {
       addNotification('Failed to update booking status', 'error');

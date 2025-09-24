@@ -141,7 +141,7 @@ router.get('/:id/tables', async (req, res) => {
                 rt.id, rt.table_number, rt.capacity, rt.status, rt.type, 
                 rt.features, rt.x_position, rt.y_position,
                 COUNT(ti.id) as image_count,
-                GROUP_CONCAT(ti.image_path) as image_paths
+                MIN(ti.image_path) as thumbnail_image
             FROM restaurant_tables rt
             LEFT JOIN table_images ti ON rt.id = ti.table_id AND ti.is_active = 1
             WHERE rt.restaurant_id = ?

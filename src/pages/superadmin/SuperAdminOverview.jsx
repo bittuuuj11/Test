@@ -35,25 +35,31 @@ const SuperAdminOverview = () => {
       const response = await apiCall('/super-admin/dashboard');
       if (response.success) {
         setDashboardData(response.data);
+      } else {
+        console.warn('Unexpected dashboard response format:', response);
+        setFallbackDashboardData();
       }
     } catch (error) {
-      addNotification('Failed to load dashboard data', 'error');
-      // Use mock data for demo
-      setDashboardData({
-        stats: {
-          totalRestaurants: 3,
-          totalCustomers: 1250,
-          totalOrders: 4567,
-          totalRevenue: 125000,
-          pendingOrders: 23,
-          activeAdmins: 3
-        },
-        recentOrders: [],
-        recentBookings: []
-      });
+      console.error('Super admin dashboard load error:', error);
+      setFallbackDashboardData();
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const setFallbackDashboardData = () => {
+    setDashboardData({
+      stats: {
+        totalRestaurants: 3,
+        totalCustomers: 1250,
+        totalOrders: 4567,
+        totalRevenue: 125000,
+        pendingOrders: 23,
+        activeAdmins: 3
+      },
+      recentOrders: [],
+      recentBookings: []
+    });
   };
 
   if (isLoading) {

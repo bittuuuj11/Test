@@ -43,7 +43,6 @@ const PreOrderView = () => {
 
   const handleQuantityChange = (item, change) => {
     if (change > 0) {
-      // Add more items to cart
       for (let i = 0; i < change; i++) {
         // This would need to be implemented in DataContext
       }
@@ -54,7 +53,7 @@ const PreOrderView = () => {
         if (cartItem) {
           removeFromCart(cartItem.id);
         }
-      }
+      addNotification('Order failed: ' + error.message, 'error');
     }
   };
 

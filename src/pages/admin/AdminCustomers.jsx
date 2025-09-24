@@ -28,11 +28,13 @@ const AdminCustomers = () => {
       const response = await apiCall('/admin/customers');
       if (response.success) {
         setCustomers(response.data);
+      } else {
+        console.warn('Unexpected customers response format:', response);
+        setCustomers([]);
       }
     } catch (error) {
       console.error('Failed to load customers:', error);
-      // Set empty array for demo
-      setCustomers([]);
+      addNotification('Failed to load customers from server', 'error');
     } finally {
       setIsLoading(false);
     }
