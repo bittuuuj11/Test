@@ -70,20 +70,25 @@ router.post('/', authenticateToken, authorizeRole(['customer']), orderValidation
         }
 
         // Calculate and verify total amount
-        let calculatedTotal = 0;
+        let subtotal = 0;
         const orderItemsData = [];
 
         for (const orderItem of items) {
             const menuItem = menuItems.find(item => item.id === orderItem.menuItemId);
             const itemTotal = menuItem.price * orderItem.quantity;
-            calculatedTotal += itemTotal;
-            
+            subtotal += itemTotal;
+
             orderItemsData.push({
                 menuItemId: orderItem.menuItemId,
                 quantity: orderItem.quantity,
                 price: menuItem.price
             });
         }
+
+        // Calculate tax and delivery fees
+        const tax = subtotal * 0.08; // 8% tax
+        const deliveryFee = orderType === 'delivery' ? 5.99 : 0;
+        const calculatedTotal = subtotal + tax + deliveryFee;
 
         // Allow small floating point differences
         if (Math.abs(calculatedTotal - totalAmount) > 0.01) {
