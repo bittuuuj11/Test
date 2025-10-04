@@ -90,16 +90,26 @@ const PaymentView = () => {
         quantity: item.quantity,
       }));
 
+      const requestBody = {
+        restaurantId: orderData.restaurant.id,
+        orderType: orderData.orderDetails.orderType,
+        items: orderItems,
+        totalAmount: orderData.pricing.total
+      };
+
+      // Only include scheduledTime if it's not empty
+      if (orderData.orderDetails.scheduledTime) {
+        requestBody.scheduledTime = orderData.orderDetails.scheduledTime;
+      }
+
+      // Only include specialInstructions if it's not empty
+      if (orderData.orderDetails.specialInstructions) {
+        requestBody.specialInstructions = orderData.orderDetails.specialInstructions;
+      }
+
       const result = await apiCall('/orders', {
         method: 'POST',
-        body: {
-          restaurantId: orderData.restaurant.id,
-          orderType: orderData.orderDetails.orderType,
-          items: orderItems,
-          totalAmount: orderData.pricing.total,
-          scheduledTime: orderData.orderDetails.scheduledTime,
-          specialInstructions: orderData.orderDetails.specialInstructions
-        }
+        body: requestBody
       });
 
       if (result && result.success) {
