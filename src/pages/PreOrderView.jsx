@@ -52,7 +52,7 @@ const PreOrderView = () => {
       for (let i = 0; i < Math.abs(change); i++) {
         const cartItem = cart.find(cartItem => cartItem.name === item.name && cartItem.restaurantId === parseInt(id));
         if (cartItem) {
-          removeFromCart(cartItem.id);
+          removeFromCart(cartItem.cartItemId);
         }
       }
     }
@@ -180,10 +180,10 @@ const PreOrderView = () => {
                     <button
                       onClick={() => {
                         // Remove all instances of this item
-                        const itemsToRemove = cart.filter(cartItem => 
+                        const itemsToRemove = cart.filter(cartItem =>
                           cartItem.name === item.name && cartItem.restaurantId === parseInt(id)
                         );
-                        itemsToRemove.forEach(cartItem => removeFromCart(cartItem.id));
+                        itemsToRemove.forEach(cartItem => removeFromCart(cartItem.cartItemId));
                         addNotification(`Removed ${item.name} from cart`, 'success');
                       }}
                       className="text-red-500 hover:text-red-700 transition-colors"

@@ -170,11 +170,11 @@ export const CustomerDataProvider = ({ children }) => {
   }, [dataLoaded]);
 
   const addToCart = (item, restaurantId) => {
-    setCart(prev => [...prev, { ...item, restaurantId, id: Date.now() }]);
+    setCart(prev => [...prev, { ...item, restaurantId, cartItemId: Date.now() }]);
   };
 
-  const removeFromCart = (itemId) => {
-    setCart(prev => prev.filter(item => item.id !== itemId));
+  const removeFromCart = (cartItemId) => {
+    setCart(prev => prev.filter(item => item.cartItemId !== cartItemId));
   };
 
   const clearCart = () => {
